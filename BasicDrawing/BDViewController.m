@@ -18,12 +18,9 @@
 #pragma mark
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-	
-	if ([_drawImage isHidden]) {
-		return;
-	}
-	
+
 	mouseSwiped = NO;
+
 	UITouch *touch = [touches anyObject];
     
     // double tap clear don't want that right now
@@ -33,36 +30,19 @@
     //	}
 	
 	lastPoint = [touch locationInView:self.view];
-	lastPoint.y -= 20;
+	//lastPoint.y -= 20;
 	
 }
 
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-	
-	if ([_drawImage isHidden]) {
-		return;
-	}
-	
+
 	mouseSwiped = YES;
 	
 	UITouch *touch = [touches anyObject];
-	CGPoint currentPoint = [touch locationInView:self.view];
-	currentPoint.y -= 20;
-	
-	UIGraphicsBeginImageContext(_drawImage.frame.size);
-	[_drawImage.image drawInRect:CGRectMake(0, 0, _drawImage.frame.size.width, _drawImage.frame.size.height)];
-	CGContextSetLineCap(UIGraphicsGetCurrentContext(), kCGLineCapRound);
-	CGContextSetLineWidth(UIGraphicsGetCurrentContext(), 5.0);
-	CGContextSetRGBStrokeColor(UIGraphicsGetCurrentContext(), 1.0, 0.0, 0.0, 1.0);
-	CGContextBeginPath(UIGraphicsGetCurrentContext());
-	CGContextMoveToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
-	CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), currentPoint.x, currentPoint.y);
-	CGContextStrokePath(UIGraphicsGetCurrentContext());
-	_drawImage.image = UIGraphicsGetImageFromCurrentImageContext();
-	UIGraphicsEndImageContext();
-	
-	lastPoint = currentPoint;
-	
+    NSLog(@"%d",touch.phase);
+
+	[self draw:touch];
+
 	mouseMoved++;
 	
 	if (mouseMoved == 10) {
@@ -72,27 +52,47 @@
 }
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-	
-	if ([_drawImage isHidden]) {
-		return;
+	   
+	UITouch *touch = [touches anyObject];
+    NSLog(@"%d",touch.phase);
+
+	if( ! mouseSwiped) {
+
+		[self draw:touch];
 	}
+
+}
+
+-(void)draw:(UITouch*)touch {
     
-	if(!mouseSwiped) {
-		
-		UIGraphicsBeginImageContext(_drawImage.frame.size);
-		[_drawImage.image drawInRect:CGRectMake(0, 0, _drawImage.frame.size.width, _drawImage.frame.size.height)];
-		CGContextSetLineCap(UIGraphicsGetCurrentContext(), kCGLineCapRound);
-		CGContextSetLineWidth(UIGraphicsGetCurrentContext(), 5.0);
-		CGContextSetRGBStrokeColor(UIGraphicsGetCurrentContext(), 1.0, 0.0, 0.0, 1.0);
-		CGContextMoveToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
-		CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
-		CGContextStrokePath(UIGraphicsGetCurrentContext());
-		CGContextFlush(UIGraphicsGetCurrentContext());
-		_drawImage.image = UIGraphicsGetImageFromCurrentImageContext();
-		UIGraphicsEndImageContext();
-		
-	}
-	
+    NSLog(@"%d",touch.phase);
+    
+    CGPoint currentPoint = [touch locationInView:self.view];
+	currentPoint.y -= 20;
+    
+	UIGraphicsBeginImageContext(_drawImage.frame.size);
+	[_drawImage.image drawInRect:_drawImage.frame];
+	CGContextSetLineCap(UIGraphicsGetCurrentContext(), kCGLineCapRound);
+    
+	CGContextSetLineWidth(UIGraphicsGetCurrentContext(), 5.0);
+	CGContextSetRGBStrokeColor(UIGraphicsGetCurrentContext(), 1.0, 0.0, 0.0, 1.0);
+	CGContextBeginPath(UIGraphicsGetCurrentContext());
+    
+	CGContextMoveToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
+    
+    if (touch.phase == 1) {
+        CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), currentPoint.x, currentPoint.y);
+    } else {
+        CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
+    }
+    
+	CGContextStrokePath(UIGraphicsGetCurrentContext());
+    
+	_drawImage.image = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+    
+    lastPoint = currentPoint;
+    
 }
 
 #pragma mark -
