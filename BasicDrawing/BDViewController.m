@@ -8,7 +8,21 @@
 
 #import "BDViewController.h"
 
-@interface BDViewController ()
+@interface BDViewController () {
+
+    CGPoint lastPoint;
+	BOOL mouseSwiped;
+
+	int mouseMoved;
+
+    CGFloat point;
+    UIColor *color;
+
+}
+
+@property (weak, nonatomic) IBOutlet UIButton *buttonErase;
+@property (weak, nonatomic) IBOutlet UISegmentedControl *segmentPointSize;
+@property (strong, nonatomic) IBOutlet UIImageView *drawImage;
 
 @end
 
@@ -16,6 +30,32 @@
 
 #pragma mark -
 #pragma mark
+
+- (IBAction)actionSetPointSize:(id)sender {
+
+    NSLog(@"sender:%i",_segmentPointSize.selectedSegmentIndex);
+    
+    point = (_segmentPointSize.selectedSegmentIndex + 1) * 15;
+    
+}
+
+- (IBAction)actionErase:(id)sender {
+
+    UIButton *erase = sender;
+
+    if ( ! [erase isSelected] ) {
+
+        [_buttonErase setSelected:YES];
+        color = [UIColor clearColor];
+
+    } else {
+
+        [_buttonErase setSelected:NO];
+        color = [UIColor blackColor];
+
+    }
+    
+}
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
 
@@ -59,40 +99,55 @@
 	if( ! mouseSwiped) {
 
 		[self draw:touch];
+
 	}
 
 }
 
 -(void)draw:(UITouch*)touch {
     
-    NSLog(@"%d",touch.phase);
-    
     CGPoint currentPoint = [touch locationInView:self.view];
 	currentPoint.y -= 20;
     
 	UIGraphicsBeginImageContext(_drawImage.frame.size);
 	[_drawImage.image drawInRect:_drawImage.frame];
-	CGContextSetLineCap(UIGraphicsGetCurrentContext(), kCGLineCapRound);
+
+    CGContextRef cgref = UIGraphicsGetCurrentContext();
+
+    CGContextSetLineCap(cgref, kCGLineCapRound);
     
-	CGContextSetLineWidth(UIGraphicsGetCurrentContext(), 5.0);
-	CGContextSetRGBStrokeColor(UIGraphicsGetCurrentContext(), 1.0, 0.0, 0.0, 1.0);
-	CGContextBeginPath(UIGraphicsGetCurrentContext());
+    CGContextSetLineWidth(cgref, point);
+    CGContextSetStrokeColorWithColor(cgref, [color CGColor]);
+    CGContextBeginPath(cgref);
     
-	CGContextMoveToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
-    
-    if (touch.phase == 1) {
-        CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), currentPoint.x, currentPoint.y);
+    CGContextMoveToPoint(cgref, lastPoint.x, lastPoint.y);
+
+    if ( [_buttonErase isSelected] ) {
+
+        CGContextSetBlendMode(cgref, kCGBlendModeClear);
+        CGContextClosePath(cgref);
+        CGContextDrawPath(cgref, kCGPathFillStroke);
+
     } else {
-        CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
+
+        CGContextSetBlendMode(UIGraphicsGetCurrentContext(), kCGBlendModeColor);
+        
+        if (touch.phase == 1) {
+            CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), currentPoint.x, currentPoint.y);
+        } else {
+            CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), lastPoint.x, lastPoint.y);
+        }
+
+        CGContextStrokePath(UIGraphicsGetCurrentContext());
+
     }
-    
-	CGContextStrokePath(UIGraphicsGetCurrentContext());
-    
-	_drawImage.image = UIGraphicsGetImageFromCurrentImageContext();
+
+    _drawImage.image = UIGraphicsGetImageFromCurrentImageContext();
+
 	UIGraphicsEndImageContext();
     
     lastPoint = currentPoint;
-    
+
 }
 
 #pragma mark -
@@ -101,7 +156,16 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+
 	// Do any additional setup after loading the view, typically from a nib.
+
+    [_buttonErase setTitle:@"Erase √" forState:UIControlStateSelected];
+    [_buttonErase setTitle:@"Erase" forState:UIControlStateNormal];
+
+    color = [UIColor blackColor];
+
+    point = 25;
+    
 }
 
 - (void)didReceiveMemoryWarning

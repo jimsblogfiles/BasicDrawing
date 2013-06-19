@@ -8,15 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface BDViewController : UIViewController <UIGestureRecognizerDelegate> {
-
-    CGPoint lastPoint;
-	BOOL mouseSwiped;
-	int mouseMoved;
-
-}
-
-@property (strong, nonatomic) IBOutlet UIImageView *drawImage;
-
+@interface BDViewController : UIViewController <UIGestureRecognizerDelegate> {}
 
 @end
